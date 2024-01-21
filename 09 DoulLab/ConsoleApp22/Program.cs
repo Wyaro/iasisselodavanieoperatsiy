@@ -1,4 +1,4 @@
-kfusing SimplexLib;
+using SimplexLib;
 using System;
 
 namespace ConsoleApp22
