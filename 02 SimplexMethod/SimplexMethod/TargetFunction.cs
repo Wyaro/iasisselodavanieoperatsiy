@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimplexMethod
 {
@@ -17,6 +12,7 @@ namespace SimplexMethod
     public class TargetFunction : INotifyPropertyChanged
     {
         private double[] coefficients;
+        private Target target;
         private double b;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -26,7 +22,44 @@ namespace SimplexMethod
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public Target Target { get; set; }
+        public Target Target 
+        { 
+            get
+            {
+                return target;
+            }
+            set
+            {
+                target = value;
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(TargetString));
+            }
+        }
+
+        public string TargetString
+        {
+            get
+            {
+                return target.ToString();
+            }
+            set
+            {
+                string lowerCaseValue = value.ToLowerInvariant();
+                switch (lowerCaseValue)
+                {
+                    case "min":
+                    case "<-":
+                        target = Target.Min;
+                        break;
+                    case "max":
+                    case "->":
+                        target = Target.Max; 
+                        break;
+                }
+                NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(Target));
+            }
+        }
 
         public int CoefficientsCount { get; private set; }
 
@@ -47,8 +80,10 @@ namespace SimplexMethod
         {
             CoefficientsCount = numberOfCoefficients;
             coefficients = new double[numberOfCoefficients];
+            Target = Target.Max;
         }
 
+        [IndexerName ("Item")]
         public double this[int i]
         {
             get
@@ -58,8 +93,37 @@ namespace SimplexMethod
             set
             {
                 coefficients[i] = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged($"Item[]");
             }
+        }
+        public TargetFunction(double[] coefficients, double B, Target target)
+        {
+            this.coefficients = coefficients;
+            this.target = target;
+            this.B = B;
+        }
+
+        public TargetFunction GetCanonicalForm()
+        {
+            TargetFunction canonical = new TargetFunction(CofficientsCount());
+            canonical.Target = Target;
+            canonical.coefficients = coefficients.Clone() as double[];
+            canonical.B = B;
+            if (canonical.Target == Target.Max)
+            {
+                for (int i = 0; i < canonical.coefficients.Length; i++)
+                {
+                    canonical[i] *= -1;
+                    canonical.B *= -1;
+                }
+                canonical.Target = Target.Min;
+            }
+            return canonical;
+        }
+
+        public int CofficientsCount()
+        {
+            return coefficients.Length;
         }
     }
 }

@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SimplexMethod
 {
@@ -22,6 +17,7 @@ namespace SimplexMethod
         public int Rows { get; private set; }
         public int Columns { get; private set; }
 
+        [IndexerName("Item")]
         public LinearExpression this[int i]
         {
             get
@@ -31,10 +27,11 @@ namespace SimplexMethod
             set
             {
                 expressions[i] = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged("Item[]");
             }
         }
 
+        [IndexerName("Item")]
         public double this[int i, int j]
         {
             get
@@ -44,7 +41,7 @@ namespace SimplexMethod
             set
             {
                 expressions[i][j] = value;
-                NotifyPropertyChanged();
+                NotifyPropertyChanged("Item[,]");
             }
         }
 
@@ -62,5 +59,26 @@ namespace SimplexMethod
         }
 
         private Constraints() { }
+
+        public void TransformExpressions()
+        {
+            for (int i = 0; i < expressions.Length; i++)
+            {
+                LinearExpression expression = expressions[i];
+                if (expression.Sign == Sign.GreaterThanEqual)
+                {
+                    expression.InvertGreaterThan();
+                }
+            }
+        }
+
+        public void ToCanonicalForm()
+        {
+            for (int i = 0; i < expressions.Length; i++)
+            {
+                TransformExpressions();
+                expressions[i].Sign = Sign.Equal;
+            }
+        }
     }
 }
